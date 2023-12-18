@@ -108,3 +108,102 @@ public class ExecutorServiceExample {
     }
 }
 在这个例子中，一个固定大小的线程池被创建来运行任务。submit 方法用于提交任务，shutdown 用于关闭线程池。对于 Callable 任务，我们可以通过 Future 对象检索执行结果。
+
+============without ExecutorService
+//     A queue to hold tasks (Runnable objects).
+// Worker threads to process tasks from the queue.
+// Synchronization mechanisms to safely add and remove tasks from the queue.
+
+    import java.util.LinkedList;
+import java.util.Queue;
+
+public class TaskQueue {
+    private final Queue<Runnable> queue;
+    private final Thread[] workers;
+    private volatile boolean isStopped = false;
+
+    public TaskQueue(int numberOfThreads) {
+        queue = new LinkedList<>();
+        workers = new Thread[numberOfThreads];
+
+        // Initialize worker threads
+        for (int i = 0; i < numberOfThreads; i++) {
+            workers[i] = new Worker("Worker-" + i);
+            workers[i].start();
+        }
+    }
+
+    public void addTask(Runnable task) {
+        synchronized (queue) {
+            if (!isStopped) {
+                queue.add(task);
+                queue.notify(); // Notify a waiting worker
+            }
+        }
+    }
+
+    public void stop() {
+        synchronized (queue) {
+            isStopped = true;
+            for (Thread worker : workers) {
+                worker.interrupt(); // Interrupt worker threads
+            }
+        }
+    }
+
+    private class Worker extends Thread {
+        public Worker(String name) {
+            super(name);
+        }
+
+        @Override
+        public void run() {
+            Runnable task;
+            while (true) {
+                synchronized (queue) {
+                    while (queue.isEmpty() && !isStopped) {
+                        try {
+                            queue.wait(); // Wait for a task to be added
+                        } catch (InterruptedException e) {
+                            // Handle thread interruption (e.g., for shutting down)
+                            if (isStopped) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isStopped && queue.isEmpty()) {
+                        break;
+                    }
+
+                    task = queue.poll(); // Retrieve the next task
+                }
+
+                try {
+                    if (task != null) {
+                        task.run(); // Execute the task
+                    }
+                } catch (Exception e) {
+                    // Handle exceptions thrown by tasks
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+        TaskQueue taskQueue = new TaskQueue(3);
+
+        // Add some tasks
+        for (int i = 0; i < 10; i++) {
+            int finalI = i;
+            taskQueue.addTask(() -> {
+                System.out.println(Thread.currentThread().getName() + " executing task " + finalI);
+            });
+        }
+
+        // Optionally, stop the task queue
+        // taskQueue.stop();
+    }
+}
+
