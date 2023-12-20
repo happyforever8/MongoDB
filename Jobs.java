@@ -142,3 +142,45 @@ By using an ExecutorService for asynchronous execution, handling exceptions, and
   to add sub-jobs to the queue, you have a more robust job management system that 
   can handle a variety of scenarios in a flexible manner. Adjust the thread pool 
   size and error handling as needed for your use case.
+
+
+  在 Java 中，ExecutorService 和 Future 通常一起使用来异步执行任务并能够获取任务的结果。ExecutorService 提供了一个框架来异步地执行任务，而 Future 提供了一种检查任务是否完成并获取其结果的方式。
+
+使用 ExecutorService 和 Future
+创建 ExecutorService：首先，创建一个 ExecutorService 实例。这可以通过 Executors 工具类来完成。
+  例如，Executors.newFixedThreadPool(nThreads) 创建一个固定数量线程的线程池。
+
+提交任务：使用 ExecutorService 提交任务（Callable 或 Runnable）。
+  提交后，会返回一个 Future 对象。Callable 任务能返回结果，而 Runnable 不返回。
+
+获取结果：通过调用 Future 对象的 get() 方法来检索 Callable 任务的结果。该方法会阻塞，直到任务完成并返回结果。
+
+关闭 ExecutorService：最后，一旦任务完成，应该关闭 ExecutorService 来释放资源。
+
+  import java.util.concurrent.*;
+
+public class FutureExample {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        // 提交 Callable 任务，并获取 Future 对象
+        Future<Integer> futureTask = executor.submit(new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                // 执行一些计算
+                TimeUnit.SECONDS.sleep(2);
+                return 123;
+            }
+        });
+
+        // 当任务还在运行时，可以执行其他操作
+
+        // 使用 futureTask.get() 获取结果，此方法会阻塞直到任务完成
+        Integer result = futureTask.get();
+        System.out.println("Result of FutureTask: " + result);
+
+        // 最后，一定要关闭 ExecutorService
+        executor.shutdown();
+    }
+}
+
