@@ -85,3 +85,130 @@ public class LinkedHashMap<K, V> {
         return removed;
     }
 }
+==========lru===============
+
+  //class LRUCache {
+
+// linkedinhashmap is the ordering of the elements. 
+// LinkedHashMap<Integer, Integer> mCache;
+//Time complexity for get() and put() operations is Big O(1).
+// int mCapacity = 0;
+// public LRUCache(int capacity) {
+//     mCache = new LinkedHashMap<>();
+//     mCapacity = capacity;
+// }
+// public int get(int key) {
+//     if (mCache.containsKey(key)) {
+//         int value = mCache.get(key);
+//         mCache.remove(key);
+//         mCache.put(key, value);
+//         return mCache.get(key);
+//     }
+//     return -1;
+// }
+// public void put(int key, int value) {
+//     if (mCapacity == 0) {
+//         return;
+//     }
+//     if (mCache.containsKey(key)) {
+//         mCache.remove(key);
+//     } else {
+//         if (mCache.size() >= mCapacity) {
+//             Entry<Integer, Integer> entry = mCache.entrySet().iterator().next();
+//             mCache.remove(entry.getKey());
+//         }
+//     }
+//     mCache.put(key, value);
+// }
+
+
+    class LRUCache {
+    int capacity;
+    Map<Integer, DoubleLinkedList> map;
+    DoubleLinkedList head;
+    DoubleLinkedList tail;
+    int count;
+    
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        count = 0;
+        
+        map = new HashMap<>();
+        head = new DoubleLinkedList(0, 0);
+        tail = new DoubleLinkedList(0, 0);
+        
+        head.next = tail;
+        head.prev = null;
+        tail.next = null;
+        tail.prev = head;
+    }
+    
+    public int get(int key) {
+        if (!map.containsKey(key)){
+            return -1;
+        }
+        
+        DoubleLinkedList node = map.get(key);
+        
+        int result = node.value;
+        remove(node);
+        addHead(node);
+        return result;
+    }
+    public void remove(DoubleLinkedList node){
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+    
+    public void addHead(DoubleLinkedList node){
+        DoubleLinkedList next = head.next;
+        
+        node.next = next;
+        next.prev = node;
+        
+        node.prev = head;
+        head.next = node;
+    }
+    public void put(int key, int value) {
+        DoubleLinkedList node = new DoubleLinkedList(key, value);
+        
+        if (map.containsKey(key)){
+            remove(map.get(key)); // should remove first
+            map.put(key, node);
+            
+            addHead(node);
+        } else {
+            
+            if (count < capacity){
+                map.put(key, node);
+                addHead(node);
+                count++;
+            } else {
+                DoubleLinkedList last = tail.prev;
+                
+                map.remove(last.key);
+                remove(last); // remeber to remove last one
+                addHead(node);
+                map.put(key, node);
+            }
+        }
+    }
+    class DoubleLinkedList{
+        int key;
+        int value;
+        DoubleLinkedList prev;
+        DoubleLinkedList next;
+        
+        public DoubleLinkedList(int key, int value){
+            this.key = key;
+            this.value = value;
+        }
+    }
+}
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache obj = new LRUCache(capacity);
+ * int param_1 = obj.get(key);
+ * obj.put(key,value);
+ */
