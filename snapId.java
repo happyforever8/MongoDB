@@ -13,6 +13,10 @@
   * DS.getVal(k1, snap4) -> v3  *  */
   
     public class SnapMap {
+
+  //  new HashMap<>(base) 创建了 base 映射的一个浅拷贝。
+  // 这意味着每个快照 (snapVersion) 都保存了当时 base 映射的一个独立副本。
+  // 所以，当你检索特定版本的快照时，你能够得到在那个特定时间点 base 映射的状态。
         private static final String DELETED = "deleted";
         static int snapVersion = 0;
         static Map < Integer, Map < String, String >> snap2KeyValue = new HashMap < > ();
